@@ -28,6 +28,14 @@ sol([
 [1, 1, 1, 1, 3, 3, 3, 3, 3, 3]
 ]).
 
+puzZ([
+[_, _, _, _, _],
+[2, _, _, 1, _],
+[_, _, _, _, _],
+[1, _, _, 2, _],
+[4, _, 4, 3, 3]
+]).
+
 % reads a puzzle from a specified file and solves it
 numberlink_f(Filename, M) :-
     see(Filename),
