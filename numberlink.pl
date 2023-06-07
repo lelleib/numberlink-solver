@@ -37,11 +37,14 @@ puzZ([
 ]).
 
 % reads a puzzle from a specified file and solves it
-numberlink_f(Filename, M) :-
+numberlink_f(Filename, M, Time) :-
     see(Filename),
     read(M),
     seen,
-    numberlink(M).
+    statistics(walltime, [Start,_]),
+    numberlink(M),
+    statistics(walltime, [Stop,_]),
+    Time is Stop-Start.
 
 % solves a puzzle, input matrix format above
 numberlink(M) :-

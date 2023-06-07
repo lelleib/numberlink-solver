@@ -1,4 +1,14 @@
 from ortools.sat.python import cp_model
+import time
+
+def numberlink_f(filename):
+    f = open(filename, 'r')
+    puzzle_str = f.read()
+    f.close()
+    start_time = time.time()
+    solution = numberlink(puzzle_str)
+    elapsed_time = time.time() - start_time
+    return solution, elapsed_time
 
 def numberlink(puzzle_str):
     puzzle = read_puz(puzzle_str)
@@ -24,7 +34,7 @@ def numberlink(puzzle_str):
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print('yaaaaaaassss, found a solution')
-        return([[solver.Value(cell) for cell in row] for row in solution])
+        return [[solver.Value(cell) for cell in row] for row in solution]
 
     return 'no solutions, sorry'
 
@@ -81,9 +91,8 @@ sol = """[
 [1, 1, 1, 1, 3, 3, 3, 3, 3, 3]
 ]."""
 
-solution = numberlink(puz)
+solution, elapsed_time = numberlink_f('puzzles/small/16x19.txt')
+print('Solution:')
 print_m(solution)
-if solution == read_sol(sol):
-    print("Right solution!")
-else:
-    print("Wrong solution!")
+print('Elapsed time:')
+print(elapsed_time)
