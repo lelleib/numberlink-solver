@@ -1,4 +1,15 @@
 from ortools.sat.python import cp_model
+import time
+import glob
+
+def numberlink_f(filename):
+    f = open(filename, 'r')
+    puzzle_str = f.read()
+    f.close()
+    start_time = time.time()
+    solution = numberlink(puzzle_str)
+    elapsed_time = time.time() - start_time
+    return solution, elapsed_time
 
 def numberlink(puzzle_str):
     puzzle = read_puz(puzzle_str)
@@ -24,7 +35,7 @@ def numberlink(puzzle_str):
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print('yaaaaaaassss, found a solution')
-        return([[solver.Value(cell) for cell in row] for row in solution])
+        return [[solver.Value(cell) for cell in row] for row in solution]
 
     return 'no solutions, sorry'
 
@@ -55,35 +66,8 @@ def add_count_eq(vars, value, count, model):
 def print_m(M):
     for row in M:
         print(row)
-        #print('\n')
-puz = """[
-[_, _, 1, 6, _, _, 4, _, _, _],
-[_, _, _, _, 7, _, _, _, _, _],
-[_, _, _, _, _, _, _, 5, _, _],
-[_, _, _, _, 2, _, _, _, _, _],  
-[_, _, _, _, 3, _, 4, _, _, _],
-[_, _, _, _, _, _, _, _, _, 6],
-[_, _, _, _, _, _, _, _, _, _],
-[_, _, _, _, _, _, _, _, _, _],
-[_, 7, 5, _, _, _, _, 1, 2, _],
-[_, _, _, _, 3, _, _, _, _, _]
-]."""
-sol = """[
-[1, 1, 1, 6, 6, 6, 4, 4, 4, 4],
-[1, 7, 7, 7, 7, 6, 6, 6, 6, 4],
-[1, 7, 5, 5, 5, 5, 5, 5, 6, 4],
-[1, 7, 5, 2, 2, 6, 6, 6, 6, 4],
-[1, 7, 5, 2, 3, 6, 4, 4, 4, 4],
-[1, 7, 5, 2, 3, 6, 6, 6, 6, 6],
-[1, 7, 5, 2, 3, 3, 3, 3, 3, 3],
-[1, 7, 5, 2, 2, 2, 2, 2, 2, 3],
-[1, 7, 5, 1, 1, 1, 1, 1, 2, 3],
-[1, 1, 1, 1, 3, 3, 3, 3, 3, 3]
-]."""
 
-solution = numberlink(puz)
-print_m(solution)
-if solution == read_sol(sol):
-    print("Right solution!")
-else:
-    print("Wrong solution!")
+for filename in glob.glob("puzzles/*/*"):
+    solution, elapsed_time = numberlink_f(filename)
+    print(f'Elapsed time until solution for {filename} (in seconds):')
+    print(elapsed_time)
