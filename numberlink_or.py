@@ -1,7 +1,6 @@
 from ortools.sat.python import cp_model
 import time
 import glob
-from multiprocessing import Process
 
 def numberlink_test(puzzle_folder, timeout, out_filename):
     for in_filename in glob.glob(f'puzzles/{puzzle_folder}/*'):
