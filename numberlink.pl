@@ -25,16 +25,21 @@ numberlink_test(PuzzleFolder, LabelingOptions, Timeout, OutFilename) :-
     ), Fs),
     reverse(Fs, Filenames),
     member(Filename, Filenames),
-    ( numberlink_f(Filename, [time_out(Timeout, _)|LabelingOptions], _, Time)
-    -> Result = 1
-    ; Result = 0
+    ( numberlink_f(Filename, [time_out(Timeout, Result)|LabelingOptions], _, Time)
+    -> Executed = 1
+    ; Executed = 0
     ),
     open(OutFilename, append, Stream),
     write(Stream, 'Elapsed time until solution for '), write(Stream, Filename), write(Stream, ' (in seconds):'), nl(Stream),
-    ( Result == 1
-    -> write(Stream, Time), nl(Stream)
-    ; write(Stream, 'TIMEOUT ('), write(Stream, Timeout), write(Stream, 's)'), nl(Stream)
+    ( Executed == 1
+    -> 
+        ( Result == success
+        -> write(Stream, Time)
+        ; write(Stream, 'TIMEOUT ('), write(Stream, Timeout), write(Stream, 'ms)')
+        )
+    ; write(Stream, 'DID NOT EXECUTE')
     ),
+    nl(Stream),
     close(Stream),
     fail.
 
