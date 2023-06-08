@@ -1,6 +1,14 @@
 from ortools.sat.python import cp_model
 import time
 import glob
+from multiprocessing import Process
+
+def numberlink_test(in_filename, out_filename):
+    solution, elapsed_time = numberlink_f(in_filename)
+    f = open(out_filename, 'w')
+    f.write(f'Elapsed time until solution for {in_filename} (in seconds):')
+    f.write(elapsed_time)
+    f.close()
 
 def numberlink_f(filename):
     f = open(filename, 'r')
@@ -67,7 +75,15 @@ def print_m(M):
     for row in M:
         print(row)
 
-for filename in glob.glob("puzzles/*/*"):
-    solution, elapsed_time = numberlink_f(filename)
-    print(f'Elapsed time until solution for {filename} (in seconds):')
-    print(elapsed_time)
+if __name__ == '__main__':
+    results_filename ='or_results.txt'
+    timeout = 1
+    for filename in glob.glob("puzzles/*/*"):
+        process = Process(target=lambda: numberlink_test(filename, results_filename))
+        process.start()
+        process.join(timeout=timeout)
+        process.terminate()
+        if process.exitcode is None:
+            f = open(results_filename, 'w')
+            f.write(f'Puzzle in {filename} timed out (in {timeout}s):')
+            f.close()
