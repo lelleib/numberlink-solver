@@ -1,24 +1,54 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 :- use_module(library(between)).
+:- use_module(library(file_systems)).
 
-% M is the solution of the puzzle that can be found under Filename, Time is the time required to solve
-numberlink_f(Filename, M, Time) :-
+:- prolog_load_context(directory, Dir), current_directory(_, Dir).
+
+% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, using differend combinations of labeling options
+numberlink_grid_search(PuzzleFolder, OutFilename) :-
+    member(VarOrdering, [leftmost, ff, ffc, impact, dom_w_deg]),
+    member(ValSelection, [step, enum, bisect]),
+    member(ValOrdering, [up, down, median]),
+    LabelingOptions = [VarOrdering, ValSelection, ValOrdering],
+    open(OutFilename, append, Stream),
+    nl(Stream), write(Stream, 'Labeling options: '), write(Stream, LabelingOptions), nl(Stream),
+    close(Stream),
+    numberlink_test(PuzzleFolder, LabelingOptions, OutFilename),
+    fail.
+
+% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, while using LabelingOptions
+numberlink_test(PuzzleFolder, LabelingOptions, OutFilename) :-
+    findall(F, (
+        directory_member_of_directory('puzzles', PuzzleFolder, _, Dir),
+        file_member_of_directory(Dir, '*', _, F)
+    ), Fs),
+    reverse(Fs, Filenames),
+    member(Filename, Filenames),
+    numberlink_f(Filename, LabelingOptions, _, Time),
+    open(OutFilename, append, Stream),
+    write(Stream, 'Elapsed time until solution for '), write(Stream, Filename), write(Stream, ' (in seconds):'), nl(Stream),
+    write(Stream, Time), nl(Stream),
+    close(Stream),
+    fail.
+
+% M is the solution of the puzzle that can be found under Filename, Time is the time required to solve, and solver uses LabelingOptions
+numberlink_f(Filename, LabelingOptions, M, Time) :-
     see(Filename),
     read(M),
     seen,
     statistics(walltime, [Start,_]),
-    numberlink(M),
+    numberlink(M, LabelingOptions),
     statistics(walltime, [Stop,_]),
-    Time is Stop-Start.
+    Time is (Stop-Start)*0.001.
 
-% solves puzzle M (fills all free variables)
-numberlink(M) :-
+% solves puzzle M (fills all free variables) with labeling options from LabelingOptions
+numberlink(M, LabelingOptions) :-
     append(M, MFlat),
     max_member(Max, MFlat),
     domain(MFlat, 1, Max),
     apply_constraints(M),
-    labeling([], MFlat).
+    labeling(LabelingOptions, MFlat).
 
 % applies all constraints for the puzzle M
 apply_constraints(M) :-
