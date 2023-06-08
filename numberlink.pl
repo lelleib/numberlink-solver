@@ -5,8 +5,8 @@
 
 :- prolog_load_context(directory, Dir), current_directory(_, Dir).
 
-% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, using differend combinations of labeling options
-numberlink_grid_search(PuzzleFolder, OutFilename) :-
+% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, using Timeout and different combinations of labeling options
+numberlink_grid_search(PuzzleFolder, Timeout, OutFilename) :-
     member(VarOrdering, [leftmost, ff, ffc, impact, dom_w_deg]),
     member(ValSelection, [step, enum, bisect]),
     member(ValOrdering, [up, down, median]),
@@ -14,21 +14,27 @@ numberlink_grid_search(PuzzleFolder, OutFilename) :-
     open(OutFilename, append, Stream),
     nl(Stream), write(Stream, 'Labeling options: '), write(Stream, LabelingOptions), nl(Stream),
     close(Stream),
-    numberlink_test(PuzzleFolder, LabelingOptions, OutFilename),
+    numberlink_test(PuzzleFolder, LabelingOptions, Timeout, OutFilename),
     fail.
 
-% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, while using LabelingOptions
-numberlink_test(PuzzleFolder, LabelingOptions, OutFilename) :-
+% for all puzzles in PuzzleFolder, solution times will be appended to the file under OutFilename, while using Timeout and LabelingOptions
+numberlink_test(PuzzleFolder, LabelingOptions, Timeout, OutFilename) :-
     findall(F, (
         directory_member_of_directory('puzzles', PuzzleFolder, _, Dir),
         file_member_of_directory(Dir, '*', _, F)
     ), Fs),
     reverse(Fs, Filenames),
     member(Filename, Filenames),
-    numberlink_f(Filename, LabelingOptions, _, Time),
+    ( numberlink_f(Filename, [time_out(Timeout, _)|LabelingOptions], _, Time)
+    -> Result = 1
+    ; Result = 0
+    ),
     open(OutFilename, append, Stream),
     write(Stream, 'Elapsed time until solution for '), write(Stream, Filename), write(Stream, ' (in seconds):'), nl(Stream),
-    write(Stream, Time), nl(Stream),
+    ( Result == 1
+    -> write(Stream, Time), nl(Stream)
+    ; write(Stream, 'TIMEOUT ('), write(Stream, Timeout), write(Stream, 's)'), nl(Stream)
+    ),
     close(Stream),
     fail.
 

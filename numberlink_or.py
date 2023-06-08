@@ -3,23 +3,27 @@ import time
 import glob
 from multiprocessing import Process
 
-def numberlink_test(in_filename, out_filename):
-    solution, elapsed_time = numberlink_f(in_filename)
-    f = open(out_filename, 'w')
-    f.write(f'Elapsed time until solution for {in_filename} (in seconds):')
-    f.write(elapsed_time)
-    f.close()
+def numberlink_test(puzzle_folder, timeout, out_filename):
+    for in_filename in glob.glob(f'puzzles/{puzzle_folder}/*'):
+        numberlink_test(in_filename, timeout, out_filename)
+        solution, elapsed_time = numberlink_f(in_filename, timeout)
+        f = open(out_filename, 'a')
+        f.writelines([
+            f'\nElapsed time until solution for {in_filename} (in seconds):\n',
+            str(elapsed_time) if solution else f'TIMEOUT ({timeout}s)'
+        ])
+        f.close()
 
-def numberlink_f(filename):
+def numberlink_f(filename, timeout):
     f = open(filename, 'r')
     puzzle_str = f.read()
     f.close()
     start_time = time.time()
-    solution = numberlink(puzzle_str)
+    solution = numberlink(puzzle_str, timeout)
     elapsed_time = time.time() - start_time
     return solution, elapsed_time
 
-def numberlink(puzzle_str):
+def numberlink(puzzle_str, timeout):
     puzzle = read_puz(puzzle_str)
     max = get_max_puz(puzzle)
     
@@ -39,13 +43,13 @@ def numberlink(puzzle_str):
                 add_count_eq(neighbors, cell, 2, model)
     
     solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = timeout
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print('yaaaaaaassss, found a solution')
         return [[solver.Value(cell) for cell in row] for row in solution]
 
-    return 'no solutions, sorry'
+    return None
 
 def read_puz(puzzle_str):
     puzzle_str = ''.join(puzzle_str.split()) # remove whitespaces
@@ -76,14 +80,4 @@ def print_m(M):
         print(row)
 
 if __name__ == '__main__':
-    results_filename ='or_results.txt'
-    timeout = 1
-    for filename in glob.glob("puzzles/*/*"):
-        process = Process(target=lambda: numberlink_test(filename, results_filename))
-        process.start()
-        process.join(timeout=timeout)
-        process.terminate()
-        if process.exitcode is None:
-            f = open(results_filename, 'w')
-            f.write(f'Puzzle in {filename} timed out (in {timeout}s):')
-            f.close()
+    numberlink_test(puzzle_folder='*', timeout=1, out_filename='or_results.txt')
