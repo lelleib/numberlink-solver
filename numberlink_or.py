@@ -1,6 +1,7 @@
 from ortools.sat.python import cp_model
 import time
 import glob
+import sys
 
 
 def numberlink_test(puzzle_folder, timeout, out_filename):
@@ -95,5 +96,5 @@ def print_m(M):
 
 
 if __name__ == '__main__':
-    numberlink_test(puzzle_folder='*', timeout=3600,
-                    out_filename='or_results.txt')
+    numberlink_test(puzzle_folder=sys.argv[1], timeout=int(sys.argv[2]),
+                    out_filename=sys.argv[3])
