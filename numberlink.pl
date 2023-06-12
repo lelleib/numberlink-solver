@@ -24,17 +24,19 @@ numberlink_test(PuzzleFolder, LabelingOptions, Timeout, OutFilename) :-
         file_member_of_directory(Dir, '*', _, F)
     ), Fs),
     reverse(Fs, Filenames),
-    member(Filename, Filenames),
-    ( numberlink_f(Filename, [time_out(Timeout, Result)|LabelingOptions], _, Time)
+    member(FileAbsolutePath, Filenames),
+    ( numberlink_f(FileAbsolutePath, [time_out(Timeout, Result)|LabelingOptions], Solution, Time)
     -> Executed = 1
     ; Executed = 0
     ),
     open(OutFilename, append, Stream),
-    write(Stream, 'Elapsed time until solution for '), write(Stream, Filename), write(Stream, ' (in seconds):'), nl(Stream),
+    write(Stream, 'Puzzle: '), convert_to_relative(FileAbsolutePath, FileRelativePath), write(Stream, FileRelativePath), nl(Stream),
     ( Executed == 1
     -> 
         ( Result == success
-        -> write(Stream, Time)
+        -> write(Stream, 'Elapsed Time: '), write(Stream, Time), write(Stream, ' seconds\n'), 
+            write(Stream, 'Found Solution: \n'),
+            write_m(Stream, Solution)
         ; write(Stream, 'TIMEOUT ('), write(Stream, Timeout), write(Stream, 'ms)')
         )
     ; write(Stream, 'DID NOT EXECUTE')
@@ -100,3 +102,17 @@ write_m([H|T]) :-
     write(H),
     nl,
     write_m(T).
+
+% prints a matrix on Stream
+write_m(_, []).
+write_m(Stream, [H|T]) :-
+    write(Stream, H),
+    nl(Stream),
+    write_m(Stream, T).
+
+convert_to_relative(AbsolutePath, RelativePath) :-
+    current_directory(CurrentDir),
+    atom_chars(AbsolutePath, AbsChars),
+    atom_chars(CurrentDir, CurrentChars),
+    append(CurrentChars, RelChars, AbsChars),
+    atom_chars(RelativePath, RelChars).
